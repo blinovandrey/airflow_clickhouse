@@ -1,0 +1,96 @@
+version: "2.1"
+services:
+  clickhouse:
+     image: yandex/clickhouse-server
+     ports:
+     - "8123:8123"
+     - "9000:9000"
+     - "9009:9009"
+
+  redis:
+    image: redis
+    command: redis-server --requirepass redispass
+
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/pgdata
+
+  webserver:
+    build:
+      context: ./lib
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - LOAD_EX=n
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - EXECUTOR=Celery
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - REDIS_PASSWORD=redispass
+    volumes:
+      - ./src:/usr/local/airflow/src
+    ports:
+      - "8080:8080"
+    command: webserver
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  flower:
+    build:
+      context: ./lib
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      - EXECUTOR=Celery
+      - REDIS_PASSWORD=redispass
+    ports:
+      - "5555:5555"
+    command: flower
+
+  scheduler:
+    build:
+      context: ./lib
+    restart: always
+    depends_on:
+      - webserver
+    volumes:
+      - ./src:/usr/local/airflow/src
+    environment:
+      - LOAD_EX=n
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - EXECUTOR=Celery
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - REDIS_PASSWORD=redispass
+    command: scheduler
+
+  worker:
+    build:
+      context: ./lib
+    restart: always
+    depends_on:
+      - scheduler
+    volumes:
+      - ./src:/usr/local/airflow/src
+    environment:
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+      - EXECUTOR=Celery
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+      - REDIS_PASSWORD=redispass
+    command: worker

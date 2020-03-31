@@ -1,0 +1,16 @@
+.idea/
+__pycache__/
+dist/
+inc/
+test.*
+build/
+*.egg*
+
+venv/
+
+*.pyc
+*.pyo
+*.pyd
+pytest_cache/
+.pytest_cache/
+pgdata/

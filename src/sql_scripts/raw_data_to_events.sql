@@ -1,0 +1,20 @@
+INSERT INTO events
+SELECT toDateTime(visitParamExtractUInt(raw_data.data, 'ts')),
+       visitParamExtractUInt(raw_data.data, 'userId'),
+       visitParamExtractUInt(raw_data.data, 'sessionId'),
+       visitParamExtractString(raw_data.data, 'page'),
+       visitParamExtractString(raw_data.data, 'auth'),
+       visitParamExtractString(raw_data.data, 'method'),
+       visitParamExtractUInt(raw_data.data, 'status'),
+       visitParamExtractString(raw_data.data, 'level'),
+       visitParamExtractUInt(raw_data.data, 'itemInSession'),
+       visitParamExtractString(raw_data.data, 'location'),
+       visitParamExtractString(raw_data.data, 'userAgent'),
+       visitParamExtractString(raw_data.data, 'lastName'),
+       visitParamExtractString(raw_data.data, 'firstName'),
+       toDateTime(visitParamExtractUInt(raw_data.data, 'registration')),
+       visitParamExtractString(raw_data.data, 'gender'),
+       visitParamExtractString(raw_data.data, 'artist'),
+       visitParamExtractString(raw_data.data, 'song'),
+       visitParamExtractFloat(raw_data.data, 'length')
+FROM raw_data;
